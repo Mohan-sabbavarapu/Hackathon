@@ -1,0 +1,58 @@
+<!-- project/templates/index.html -->
+<!doctype html>
+<html>
+<head>
+    <title>Hybrid AI Harassment Detector</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; }
+        #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-bottom: 10px; }
+        #input { width: 80%; padding: 5px; }
+        #send { padding: 5px 10px; }
+        .message { margin: 5px 0; }
+        .user { color: blue; }
+        .system { color: red; font-weight: bold; }
+        .badge { color: green; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>Hybrid AI Harassment Detector Demo</h1>
+    <p>Type messages below to simulate a chat. The system will detect harassment in real-time.</p>
+    <div id="chat"></div>
+    <input type="text" id="input" placeholder="Type your message...">
+    <button id="send">Send</button>
+    <script>
+        const chat = document.getElementById('chat');
+        const input = document.getElementById('input');
+        const send = document.getElementById('send');
+
+        send.addEventListener('click', sendMessage);
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+
+        function sendMessage() {
+            const msg = input.value.trim();
+            if (!msg) return;
+            appendMessage('You: ' + msg, 'user');
+            fetch('/detect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: msg })
+            })
+            .then(response => response.json())
+            .then(data => {
+                appendMessage(`Toxicity score: ${data.score.toFixed(2)}`, 'system');
+                if (data.intervention) appendMessage(data.intervention, 'system');
+                if (data.badge) appendMessage(data.badge, 'badge');
+            });
+            input.value = '';
+        }
+
+        function appendMessage(text, className) {
+            const div = document.createElement('div');
+            div.className = 'message ' + className;
+            div.innerHTML = text;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>
